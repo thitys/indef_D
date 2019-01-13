@@ -1,15 +1,22 @@
 import TUIO.*;
 TuioProcessing tuioClient;
 
+PGraphics sketchPg;
+PGraphics[] grapCanvases;
+int[][] grapsMatrix = {
+  {0, 1},
+  {1, 0},
+  {-1, 0},
+  {0, -1}
+};
+
 float cursor_size = 15;
 float object_size = 60;
 float table_size = 760;
 float scale_factor = 1;
 float x1, x2, y1, y2, z1, z2;
-PGraphics g1, g2, g3, g4;
 float x=0, y=0, z=0;
 int j=0;
-PGraphics sketchPg;
 
 boolean verbose = false;
 boolean callback = true;
@@ -31,10 +38,10 @@ void setup()
   scale_factor = height/table_size;
   tuioClient  = new TuioProcessing(this);
 
-  g1 = createGraphics(70, 70, P3D);
-  g2 = createGraphics(70, 70, P3D);
-  g3 = createGraphics(70, 70, P3D);
-  g4 = createGraphics(70, 70, P3D);
+  grapCanvases = new PGraphics[grapsMatrix.length];
+  for(int i = 0; i < grapsMatrix.length; i++) {
+    grapCanvases[i] = createGraphics(70, 70, P3D);
+  }
 }
 
 void draw() {
@@ -62,17 +69,17 @@ void draw() {
       }
     }
 
-    drawGrap(g1, 1);
-    drawGrap(g2, 2);
-    drawGrap(g3, 3);
-    drawGrap(g4, 4);
+    for(int k = 0; k < grapCanvases.length; k++) {
+      drawGrap(grapCanvases[k], k);
+    }
     pushMatrix();
     translate(tobj.getScreenX(width)-50, tobj.getScreenY(height)-50);
     rotate(tobj.getAngle());
-    image(g1, 0, 77);
-    image(g2, 77, 0);
-    image(g3, -77, 0);
-    image(g4, 0, -77);
+    for(int k = 0; k < grapCanvases.length; k++) {
+      float x = grapsMatrix[k][0] * 77;
+      float y = grapsMatrix[k][1] * 77;
+      image(grapCanvases[k], x, y);
+    }
     popMatrix();
 
     //println("x="+x);
@@ -117,21 +124,14 @@ void drawGrap(PGraphics g, int camType) {
   g.lights();
   g.background(0);
 
-  switch(camType) {
-  case 1://front
-    g.camera(0, 0, 200, 0, 0, 0, 0, 1, 0);
-    break;
-  case 2://right
-    g.camera(200, 0, 0, 0, 0, 0, 0, 1, 0);
-    break;
-  case 3://left
-    g.camera(-200, 0, 0, 0, 0, 0, 0, 1, 0);
-    break;
-  case 4://back
-    g.camera(0, 0, -200, 0, 0, 0, 0, 1, 0);
-    break;
-  }
-
+  float camX = grapsMatrix[camType][0] * 200;
+  float camZ = grapsMatrix[camType][1] * 200;
+  g.camera(
+    camX, 0, camZ,
+    0, 0, 0,
+    0, 1, 0
+  );
+  
   g.pushMatrix();
   //g.rotateX(x);
   g.translate(x, y, z);
