@@ -8,7 +8,9 @@ float SWING_WIDTH_X = 20;
 float SWING_WIDTH_Y = 30;
 float SWING_WIDTH_Z = 40;
 
-PGraphics sketchPg;
+ArrayList<Ink> inks = new ArrayList<Ink>();
+boolean is3d = false;
+PGraphics canvas2d, canvas3d;
 PGraphics[] grapCanvases;
 int[][] grapsMatrix = {
   {0, 1},
@@ -17,18 +19,14 @@ int[][] grapsMatrix = {
   {0, -1}
 };
 
-PVector pPenPos = new PVector(0, 0, 0);
-PVector penPos = new PVector(0, 0, 0);
-PVector spherePos = new PVector(0 ,0, 0);
-boolean isFirstDrawing = true;
-
 void setup()
 {
   size(1000, 750, P3D);
   frameRate(60);
   noCursor();
 
-  sketchPg = createGraphics(1000, 750, P3D);
+  canvas3d = createGraphics(1000, 750, P3D);
+  canvas2d = createGraphics(1000, 750, P2D);
   cursorSize = height / tableSize;
   tuioClient  = new TuioProcessing(this);
 
@@ -38,28 +36,30 @@ void setup()
 }
 
 void draw() {
-  background(0);
-  spherePos.set(
-    cos(frameCount/50.0) * SWING_WIDTH_X,
-    sin(frameCount/40.0) * SWING_WIDTH_Y,
-    cos(frameCount/60.0) * SWING_WIDTH_Z
+  // *** 更新 ***
+  PVector spherePos = new PVector(
+    cos(radians(frameCount) * 1.0) * SWING_WIDTH_X,
+    sin(radians(frameCount) * 1.2) * SWING_WIDTH_Y,
+    cos(radians(frameCount) * 1.4) * SWING_WIDTH_Z
   );
-
-  image(sketchPg, 0, 0);
-
   ArrayList<TuioObject> tuioObjectList = tuioClient.getTuioObjectList();
   // マーカは1つのみを前提とする
   if(tuioObjectList.size() == 1) {
     TuioObject tobj = tuioObjectList.get(0);
-    sketchPg.translate(1000/2, 750/2, 0);
-    // TODO: 手動化する
-    // if (mousePressed) {
-    //   float rotationX = map(mouseY, 0, height, -PI, PI);
-    //   float rotationY = map(mouseX, 0, width, -PI, PI);
-    //   sketchPg.rotateX(rotationX);
-    //   sketchPg.rotateY(rotationY);
-    // }
+    PVector markerPos = new PVector(tobj.getScreenX(width), tobj.getScreenY(height));
+    if(!is3d) inks.add(new Ink(spherePos, markerPos));
     drawGraps(grapCanvases, spherePos);
+  }
+  draw3d();
+  draw2d();
+
+  // *** 描画 ***
+  background(0);
+  if (is3d) image(canvas3d, 0, 0);
+  else image(canvas2d, 0, 0);
+
+  if(tuioObjectList.size() == 1 && !is3d) {
+    TuioObject tobj = tuioObjectList.get(0);
     pushMatrix();
     translate(tobj.getScreenX(width)-50, tobj.getScreenY(height)-50);
     rotate(tobj.getAngle());
@@ -69,45 +69,59 @@ void draw() {
       image(grapCanvases[k], x, y);
     }
     popMatrix();
-    drawLine(tobj);
   }
 }
 
 void keyReleased() {
   if(key == 'c') clearSketch();
+  if(key == 'd') is3d = !is3d;
 }
 
 void clearSketch() {
-  sketchPg = createGraphics(1000, 750, P3D);
-  isFirstDrawing = true;
+  inks.clear();
 }
 
-void drawLine(TuioObject tobj) {
-  float x = spherePos.x;
-  float y = spherePos.y;
-  float z = spherePos.z;
-  sketchPg.beginDraw();
-  //sketchPg.translate(0, 0);
-  if (isFirstDrawing) {
-    pPenPos.x = tobj.getScreenX(width);
-    pPenPos.y = tobj.getScreenY(height);
-    pPenPos.z = z;
-    isFirstDrawing = false;
+void draw2d() {
+  canvas2d.beginDraw();
+  canvas2d.background(0);
+
+  for(int i = 1; i < inks.size(); i++) {
+    Ink previewInk = inks.get(i - 1);
+    Ink currentInk = inks.get(i);
+    canvas2d.colorMode(HSB, 360, 100, 100);
+    color penColor = currentInk.to2DColor();
+    float penWeight = currentInk.to2DWeight();
+    canvas2d.stroke(penColor);
+    canvas2d.strokeWeight(penWeight);
+    canvas2d.line(
+      previewInk.to2DPosition().x, previewInk.to2DPosition().y,
+      currentInk.to2DPosition().x, currentInk.to2DPosition().y
+    );
   }
-  sketchPg.colorMode(HSB, 360, 100, 100);
-  float h = map(x, -SWING_WIDTH_X, SWING_WIDTH_X, 0, 360);
-  float s = map(y, -SWING_WIDTH_Y, SWING_WIDTH_Y, 0, 100);
-  float b = 100;
-  float weight = map(z, -SWING_WIDTH_Z, SWING_WIDTH_Z, 1, 10);
-  sketchPg.stroke(h, s, b);
-  sketchPg.strokeWeight(weight);
-  penPos.set(tobj.getScreenX(width), tobj.getScreenY(height), z);
-  sketchPg.line(
-    pPenPos.x, pPenPos.y, pPenPos.z * 2,
-    penPos.x, penPos.y, penPos.z * 2
-  );
-  pPenPos.set(penPos);
-  sketchPg.endDraw();
+  canvas2d.endDraw();
+}
+
+void draw3d() {
+  canvas3d.beginDraw();
+  canvas3d.background(0);
+
+  PVector transVec = new PVector(canvas3d.width / 2, canvas3d.height / 2, -canvas3d.height / 2);
+  canvas3d.translate(transVec.x, transVec.y, transVec.z);
+  canvas3d.rotateY(radians(frameCount));
+  canvas3d.translate(-transVec.x, -transVec.y, -transVec.z);
+
+  for(int i = 1; i < inks.size(); i++) {
+    Ink previewInk = inks.get(i - 1);
+    Ink currentInk = inks.get(i);
+    canvas3d.colorMode(HSB, 360, 100, 100);
+    color penColor = currentInk.to3DColor();
+    canvas3d.stroke(penColor);
+    canvas3d.line(
+      previewInk.to3DPosition().x, previewInk.to3DPosition().y, previewInk.to3DPosition().z,
+      currentInk.to3DPosition().x, currentInk.to3DPosition().y, currentInk.to3DPosition().z
+    );
+  }
+  canvas3d.endDraw();
 }
 
 void drawGraps(PGraphics[] pgs, PVector pos) {
