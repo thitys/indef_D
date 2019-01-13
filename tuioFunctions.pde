@@ -1,3 +1,9 @@
+float cursorSize = 15;
+float objectSize = 60;
+float tableSize = 760;
+float scaleFactor = 1;
+boolean verbose = false;
+
 void addTuioObject(TuioObject tobj) {
   if (verbose) println("add obj "+tobj.getSymbolID()+" ("+tobj.getSessionID()+") "+tobj.getX()+" "+tobj.getY()+" "+tobj.getAngle());
 }
@@ -13,5 +19,5 @@ void removeTuioObject(TuioObject tobj) {
 
 void refresh(TuioTime frameTime) {
   if (verbose) println("frame #"+frameTime.getFrameID()+" ("+frameTime.getTotalMilliseconds()+")");
-  if (callback) redraw();
+  redraw();
 }
