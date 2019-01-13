@@ -1,7 +1,8 @@
 import TUIO.*;
 TuioProcessing tuioClient;
 
-float GRAP_CANVAS_DISPLAY_SIZE = 77;
+float GRAP_CANVAS_SIZE = 70;
+float GRAP_CANVAS_DISPLAY_SIZE = GRAP_CANVAS_SIZE + 7;
 float TARGET_TO_CAMERA_DISTANCE = 200;
 float SWING_WIDTH_X = 20;
 float SWING_WIDTH_Y = 30;
@@ -47,7 +48,7 @@ void setup()
 
   grapCanvases = new PGraphics[grapsMatrix.length];
   for(int i = 0; i < grapsMatrix.length; i++) {
-    grapCanvases[i] = createGraphics(70, 70, P3D);
+    grapCanvases[i] = createGraphics(GRAP_CANVAS_SIZE, GRAP_CANVAS_SIZE, P3D);
   }
 }
 
