@@ -1,10 +1,6 @@
-// import the TUIO library
 import TUIO.*;
-// declare a TuioProcessing client
 TuioProcessing tuioClient;
 
-// these are some helper variables which are used
-// to create scalable graphical feedback
 float cursor_size = 15;
 float object_size = 60;
 float table_size = 760;
@@ -15,8 +11,8 @@ float x=0, y=0, z=0;
 int j=0;
 PGraphics sketchPg;
 
-boolean verbose = false; // print console debug messages
-boolean callback = true; // updates only after callbacks
+boolean verbose = false;
+boolean callback = true;
 
 void setup()
 {
@@ -24,15 +20,13 @@ void setup()
   frameRate(60);
   sketchPg = createGraphics(1000, 750, P3D);
 
-  // GUI setup
   noCursor();
   background(0);
 
-  // periodic updates
   if (!callback) {
     frameRate(60);
     loop();
-  } else noLoop(); // or callback updates 
+  } else noLoop();
 
   scale_factor = height/table_size;
   tuioClient  = new TuioProcessing(this);
@@ -117,32 +111,6 @@ void draw() {
   }
 }
 
-// --------------------------------------------------------------
-// these callback methods are called whenever a TUIO event occurs
-// there are three callbacks for add/set/del events for each object/cursor/blob type
-// the final refresh callback marks the end of each TUIO frame
-
-// called when an object is added to the scene
-void addTuioObject(TuioObject tobj) {
-  if (verbose) println("add obj "+tobj.getSymbolID()+" ("+tobj.getSessionID()+") "+tobj.getX()+" "+tobj.getY()+" "+tobj.getAngle());
-}
-
-// called when an object is moved
-void updateTuioObject (TuioObject tobj) {
-  if (verbose) println("set obj "+tobj.getSymbolID()+" ("+tobj.getSessionID()+") "+tobj.getX()+" "+tobj.getY()+" "+tobj.getAngle()
-    +" "+tobj.getMotionSpeed()+" "+tobj.getRotationSpeed()+" "+tobj.getMotionAccel()+" "+tobj.getRotationAccel());
-}
-
-// called when an object is removed from the scene
-void removeTuioObject(TuioObject tobj) {
-  if (verbose) println("del obj "+tobj.getSymbolID()+" ("+tobj.getSessionID()+")");
-}
-// --------------------------------------------------------------
-// called at the end of each TUIO frame
-void refresh(TuioTime frameTime) {
-  if (verbose) println("frame #"+frameTime.getFrameID()+" ("+frameTime.getTotalMilliseconds()+")");
-  if (callback) redraw();
-}
 void drawGrap(PGraphics g, int camType) {
   g.beginDraw();
   g.noStroke();
