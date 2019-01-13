@@ -19,8 +19,7 @@ int[][] grapsMatrix = {
   {0, -1}
 };
 
-void setup()
-{
+void setup() {
   size(1000, 750, P3D);
   frameRate(60);
   noCursor();
@@ -126,9 +125,8 @@ void draw3d() {
 
 void drawGraps(PGraphics[] pgs, PVector pos) {
   if(pgs.length != 4) return;
-  for(int i = 0; i < pgs.length; i++) {
+  for(int i = 0; i < pgs.length; i++)
     drawGrap(pgs[i], i, pos);
-  }
 }
 
 void drawGrap(PGraphics g, int camType, PVector pos) {
@@ -137,10 +135,10 @@ void drawGrap(PGraphics g, int camType, PVector pos) {
   g.lights();
   g.background(0);
 
-  float camX = grapsMatrix[camType][0] * TARGET_TO_CAMERA_DISTANCE;
-  float camZ = grapsMatrix[camType][1] * TARGET_TO_CAMERA_DISTANCE;
+  float x = grapsMatrix[camType][0] * TARGET_TO_CAMERA_DISTANCE;
+  float z = grapsMatrix[camType][1] * TARGET_TO_CAMERA_DISTANCE;
   g.camera(
-    camX, 0, camZ,
+    x, 0, z,
     0, 0, 0,
     0, 1, 0
   );
